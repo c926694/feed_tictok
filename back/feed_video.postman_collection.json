@@ -1,0 +1,527 @@
+{
+  "info": {
+    "_postman_id": "2fe08bb7-2b3e-48fc-bc2f-1fd606c87146",
+    "name": "feed_video",
+    "description": "### Welcome to Postman! This is your first collection. \n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests\n• Test your API in real-world scenarios\n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53591117",
+    "_collection_link": "https://go.postman.co/collection/53591117-2fe08bb7-2b3e-48fc-bc2f-1fd606c87146?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "user",
+      "item": [
+        {
+          "name": "login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\":\"admin\",\r\n    \"password\":\"admin\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/users/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "users",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "register",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "getUserInfo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJ1c2VyX25pY2tfbmFtZSI6IuaXoOaVjOWwj-WtpueUnyIsImV4cCI6MTc3NTIyNTAzMCwiaWF0IjoxNzc0OTY1ODMwfQ.oiqusThNvgP3_JmG3MYxp_Ye374sd3h6_gzIfkCS4ro",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/users/me",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJ1c2VyX25pY2tfbmFtZSI6IuaXoOaVjOWwj-WtpueUnyIsImV4cCI6MTc3NTIyNTAzMCwiaWF0IjoxNzc0OTY1ODMwfQ.oiqusThNvgP3_JmG3MYxp_Ye374sd3h6_gzIfkCS4ro",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/users/logout",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "users",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "video",
+      "item": [
+        {
+          "name": "createVideo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJ1c2VyX25pY2tfbmFtZSI6IuaXoOaVjOWwj-WtpueUnyIsImV4cCI6MTc3NTIyNTA4OSwiaWF0IjoxNzc0OTY1ODg5fQ.sjRJ6yX2XidbFEkk_KpH8eAvPxRQ69haGgjOsJDEiDw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "",
+                  "type": "text",
+                  "uuid": "e0f9bfb3-7666-40fd-aee9-47cc52272afc"
+                },
+                {
+                  "key": "cover",
+                  "value": "",
+                  "type": "text",
+                  "uuid": "46d5a050-75c2-4372-8684-44968ae2145e"
+                },
+                {
+                  "key": "play",
+                  "value": "",
+                  "type": "text",
+                  "uuid": "37fd8c03-75af-46e6-8f96-5f75ab7542e2"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8080/videos/create",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "videos",
+                "create"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "getFeedVideo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJ1c2VyX25pY2tfbmFtZSI6IuaXoOaVjOWwj-WtpueUnyIsImV4cCI6MTc3NTIyNTA4OSwiaWF0IjoxNzc0OTY1ODg5fQ.sjRJ6yX2XidbFEkk_KpH8eAvPxRQ69haGgjOsJDEiDw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/videos/feed/?limit=1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "videos",
+                "feed",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "getVideoInfo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/videos/feed?limit=2&last_score=1774943508720000",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "videos",
+                "feed"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "2"
+                },
+                {
+                  "key": "last_score",
+                  "value": "1774943508720000"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "getFeedHotVideo",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJ1c2VyX25pY2tfbmFtZSI6IuaXoOaVjOWwj-WtpueUnyIsImV4cCI6MTc3NTIyNTAzMCwiaWF0IjoxNzc0OTY1ODMwfQ.oiqusThNvgP3_JmG3MYxp_Ye374sd3h6_gzIfkCS4ro",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/videos/feed/hot?limit=1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "videos",
+                "feed",
+                "hot"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "deleteVideo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJ1c2VyX25pY2tfbmFtZSI6IuaXoOaVjOWwj-WtpueUnyIsImV4cCI6MTc3NTIyNTA4OSwiaWF0IjoxNzc0OTY1ODg5fQ.sjRJ6yX2XidbFEkk_KpH8eAvPxRQ69haGgjOsJDEiDw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/videos/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "videos",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "follow",
+      "item": [
+        {
+          "name": "switchFollow",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJ1c2VyX25pY2tfbmFtZSI6IuaXoOaVjOWwj-WtpueUnyIsImV4cCI6MTc3NTIyNTA4OSwiaWF0IjoxNzc0OTY1ODg5fQ.sjRJ6yX2XidbFEkk_KpH8eAvPxRQ69haGgjOsJDEiDw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/follows/switchFollow/8",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "follows",
+                "switchFollow",
+                "8"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "comment",
+      "item": [
+        {
+          "name": "createComment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJ1c2VyX25pY2tfbmFtZSI6IuaXoOaVjOWwj-WtpueUnyIsImV4cCI6MTc3NTIyNTA4OSwiaWF0IjoxNzc0OTY1ODg5fQ.sjRJ6yX2XidbFEkk_KpH8eAvPxRQ69haGgjOsJDEiDw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"video_id\" : 47,\r\n    \"content\" : \"这是测试评论\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/comments",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "comments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "deleteComment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJ1c2VyX25pY2tfbmFtZSI6IuaXoOaVjOWwj-WtpueUnyIsImV4cCI6MTc3NTIyNTA4OSwiaWF0IjoxNzc0OTY1ODg5fQ.sjRJ6yX2XidbFEkk_KpH8eAvPxRQ69haGgjOsJDEiDw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/comments/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "comments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "list",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJ1c2VyX25pY2tfbmFtZSI6IuaXoOaVjOWwj-WtpueUnyIsImV4cCI6MTc3NTIyNTA4OSwiaWF0IjoxNzc0OTY1ODg5fQ.sjRJ6yX2XidbFEkk_KpH8eAvPxRQ69haGgjOsJDEiDw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/comments/list/47",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "comments",
+                "list",
+                "47"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "like",
+      "item": [
+        {
+          "name": "switchVideoLike",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJ1c2VyX25pY2tfbmFtZSI6IuaXoOaVjOWwj-WtpueUnyIsImV4cCI6MTc3NTIyNTA4OSwiaWF0IjoxNzc0OTY1ODg5fQ.sjRJ6yX2XidbFEkk_KpH8eAvPxRQ69haGgjOsJDEiDw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/videos/swicthLike/37",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "videos",
+                "swicthLike",
+                "37"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "switchCommentLike",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJ1c2VyX25pY2tfbmFtZSI6IuaXoOaVjOWwj-WtpueUnyIsImV4cCI6MTc3NTIyNTA4OSwiaWF0IjoxNzc0OTY1ODg5fQ.sjRJ6yX2XidbFEkk_KpH8eAvPxRQ69haGgjOsJDEiDw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/likes/comment/switchLike/3",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "likes",
+                "comment",
+                "switchLike",
+                "3"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
