@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"mime/multipart"
 	"simple_tiktok/internal/dto/req"
 	"simple_tiktok/internal/dto/res"
 	"simple_tiktok/internal/initialize"
@@ -12,7 +13,10 @@ import (
 	"simple_tiktok/internal/pkg/constants"
 	"simple_tiktok/internal/pkg/hash_password"
 	"simple_tiktok/internal/pkg/jwt"
+	"simple_tiktok/internal/pkg/upload"
+	"simple_tiktok/internal/pkg/util"
 	"simple_tiktok/internal/repository/mysql"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -21,12 +25,14 @@ import (
 
 type UserService struct {
 	userRepo  *mysql.UserRepo
+	videoRepo *mysql.VideoRepo
 	userRedis *redis.Client
 }
 
-func NewUserService(repo *mysql.UserRepo, redis *redis.Client) *UserService {
+func NewUserService(repo *mysql.UserRepo, videoRepo *mysql.VideoRepo, redis *redis.Client) *UserService {
 	return &UserService{
 		userRepo:  repo,
+		videoRepo: videoRepo,
 		userRedis: redis,
 	}
 }
@@ -94,12 +100,60 @@ func (s *UserService) GetUserInfo(userId uint64) (*res.UserInfoRes, error) {
 	if err != nil {
 		return nil, err
 	}
+	videoCount, err := s.videoRepo.CountByAuthorID(userId)
+	if err != nil {
+		return nil, err
+	}
 	return &res.UserInfoRes{
+		UserID:        user.ID,
+		Username:      user.Username,
 		Nickname:      user.NickName,
-		AvatarURL:     constants.HttpPath + user.AvatarURL,
+		AvatarURL:     util.EnsureHTTPPath(user.AvatarURL),
 		FollowCount:   user.FollowCount,
 		FollowerCount: user.FollowerCount,
+		VideoCount:    videoCount,
 	}, nil
+}
+
+func (s *UserService) UpdateProfile(userID uint64, nickname string, avatar *multipart.FileHeader) (*res.UserInfoRes, error) {
+	user, err := s.userRepo.GetUserByID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	updates := make(map[string]any)
+	nickname = strings.TrimSpace(nickname)
+	if nickname != "" {
+		updates["nick_name"] = nickname
+	}
+
+	newAvatarPath := ""
+	if avatar != nil {
+		newAvatarPath, err = upload.UploadFile(avatar, upload.Avatar)
+		if err != nil {
+			return nil, err
+		}
+		updates["avatar_url"] = newAvatarPath
+	}
+
+	if err = s.userRepo.UpdateProfile(userID, updates); err != nil {
+		if newAvatarPath != "" {
+			_ = upload.Delete(upload.Avatar, newAvatarPath)
+		}
+		return nil, err
+	}
+
+	if nickname != "" && nickname != user.NickName {
+		if err = s.videoRepo.UpdateAuthorNameByAuthorID(userID, nickname); err != nil {
+			return nil, err
+		}
+	}
+
+	if newAvatarPath != "" && user.AvatarURL != "" && user.AvatarURL != constants.DefaultAvatar {
+		_ = upload.Delete(upload.Avatar, user.AvatarURL)
+	}
+
+	return s.GetUserInfo(userID)
 }
 
 func (s *UserService) Logout(userId uint64) error {

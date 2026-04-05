@@ -6,7 +6,7 @@ const (
 	AvatarPrefix    = "/avatar/"
 	CoverPrefix     = "/cover/"
 	VideoPrefix     = "/video/"
-	HttpPath        = "http://localhost:8080/static/"
+	HttpPath        = "http://localhost:80/static/"
 	FeedVideoKey    = "feed:video"
 	HotFeedVideoKey = "feed:hot:video"
 	LikeVideo       = "like:video:%d"

@@ -5,26 +5,22 @@ import (
 	"errors"
 	"log"
 	"simple_tiktok/internal/mq/event"
-	"simple_tiktok/internal/pkg/constants"
 	mysql2 "simple_tiktok/internal/repository/mysql"
-	"simple_tiktok/internal/service"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type LikeConsumer struct {
-	channel      *amqp.Channel
-	videoService *service.VideoService
-	videoRepo    *mysql2.VideoRepo
-	commentRepo  *mysql2.CommentRepo
+	channel     *amqp.Channel
+	videoRepo   *mysql2.VideoRepo
+	commentRepo *mysql2.CommentRepo
 }
 
-func NewLikeConsumer(channel *amqp.Channel, videoService *service.VideoService, videoRepo *mysql2.VideoRepo, commentRepo *mysql2.CommentRepo) *LikeConsumer {
+func NewLikeConsumer(channel *amqp.Channel, videoRepo *mysql2.VideoRepo, commentRepo *mysql2.CommentRepo) *LikeConsumer {
 	return &LikeConsumer{
-		channel:      channel,
-		videoService: videoService,
-		videoRepo:    videoRepo,
-		commentRepo:  commentRepo,
+		channel:     channel,
+		videoRepo:   videoRepo,
+		commentRepo: commentRepo,
 	}
 }
 
@@ -95,15 +91,7 @@ func (c *LikeConsumer) LikeVideoHandler(msg amqp.Delivery) {
 		return
 	}
 
-	video, err := c.videoRepo.GetVideoById(videoId)
-	if err != nil {
-		log.Println(err)
-		_ = msg.Nack(false, true)
-		return
-	}
-
-	newScore := c.videoService.HotScore(video.LikeCount, video.CommentCount, videoId)
-	if err := c.videoService.UpdateZSet(constants.HotFeedVideoKey, newScore, videoId); err != nil {
+	if err := c.publishVideoHotEvent(videoId); err != nil {
 		log.Println(err)
 		_ = msg.Nack(false, true)
 		return
@@ -146,4 +134,24 @@ func (c *LikeConsumer) LikeCommentHandler(msg amqp.Delivery) {
 	}
 
 	_ = msg.Ack(false)
+}
+
+func (c *LikeConsumer) publishVideoHotEvent(videoId uint64) error {
+	msg, err := c.getVideoHotEventMsg(videoId)
+	if err != nil {
+		return err
+	}
+	return c.channel.Publish(event.VideoHotExchange, event.VideoHotRoutingKey, false, false, msg)
+}
+
+func (c *LikeConsumer) getVideoHotEventMsg(videoId uint64) (amqp.Publishing, error) {
+	e := event.VideoHotEvent{VideoId: videoId}
+	data, err := json.Marshal(e)
+	if err != nil {
+		return amqp.Publishing{}, err
+	}
+	return amqp.Publishing{
+		ContentType: "application/json",
+		Body:        data,
+	}, nil
 }

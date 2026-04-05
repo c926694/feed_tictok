@@ -25,9 +25,13 @@ func main() {
 	}
 	videoRepo := mysql2.NewVideoRepo(initialize2.DB)
 	commentRepo := mysql2.NewCommentRepo(initialize2.DB)
+	followRepo := mysql2.NewFollowRepo(initialize2.DB)
+	userRepo := mysql2.NewUserRepo(initialize2.DB)
 	videoRedis := initialize2.RedisClient
-	videoService := service.NewVideoService(videoRepo, videoRedis, initialize2.RabbitChannel, commentRepo)
-	likeConsumer := consumer2.NewLikeConsumer(initialize2.RabbitChannel, videoService, videoRepo, commentRepo)
+	videoService := service.NewVideoService(videoRepo, userRepo, videoRedis, initialize2.RabbitChannel, commentRepo)
+	likeConsumer := consumer2.NewLikeConsumer(initialize2.RabbitChannel, videoRepo, commentRepo)
+	videoHotConsumer := consumer2.NewVideoHotConsumer(initialize2.RabbitChannel, videoRepo, videoService)
+	followConsumer := consumer2.NewFollowConsumer(initialize2.RabbitChannel, followRepo, userRepo)
 	err = likeConsumer.Declare(event.LikeVideoExchange, event.LikeVideoExchangeType,
 		event.LikeVideoQueue, event.LikeVideoRoutingKey)
 	if err != nil {
@@ -38,18 +42,34 @@ func main() {
 	if err != nil {
 		log.Fatalf("likeCommentConsumer declare error: %s", err.Error())
 	}
+	err = followConsumer.Declare(event.FollowExchange, event.FollowExchangeType,
+		event.FollowQueue, event.FollowRoutingKey)
+	if err != nil {
+		log.Fatalf("followConsumer declare error: %s", err.Error())
+	}
+	err = videoHotConsumer.Declare(event.VideoHotExchange, event.VideoHotExchangeType,
+		event.VideoHotQueue, event.VideoHotRoutingKey)
+	if err != nil {
+		log.Fatalf("videoHotConsumer declare error: %s", err.Error())
+	}
 	videoConsumer := consumer2.NewVideoConsumer(initialize2.RabbitChannel, videoRepo)
 	err = videoConsumer.Declare(event.DeleteVideoExchange, event.DeleteVideoExchangeType,
 		event.DeleteVideoQueue, event.DeleteVideoRoutingKey)
 	if err != nil {
 		log.Fatalf("videoConsumer declare error: %s", err.Error())
 	}
-	errCh := make(chan error, 3)
+	errCh := make(chan error, 5)
 	go func() {
 		errCh <- likeConsumer.ListenLikeConsumer(event.LikeVideoQueue, likeConsumer.LikeVideoHandler)
 	}()
 	go func() {
 		errCh <- likeConsumer.ListenLikeConsumer(event.LikeCommentQueue, likeConsumer.LikeCommentHandler)
+	}()
+	go func() {
+		errCh <- followConsumer.ListenFollowConsumer(event.FollowQueue, followConsumer.FollowHandler)
+	}()
+	go func() {
+		errCh <- videoHotConsumer.Listen(event.VideoHotQueue, videoHotConsumer.HotUpdateHandler)
 	}()
 	log.Println("开始监听mq")
 	go func() {

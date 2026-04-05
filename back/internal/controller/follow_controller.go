@@ -20,17 +20,20 @@ func NewFollowController(followService *service.FollowService) *FollowController
 }
 
 func (ctl *FollowController) Follow(c *gin.Context) {
-	follower, err := strconv.ParseUint(c.Param("follower"), 10, 64)
+	targetUserID, err := strconv.ParseUint(c.Param("follower"), 10, 64)
 	if err != nil {
 		response.Fail(c, http.StatusBadRequest, err.Error())
+		return
 	}
-	userId, err := type_convert.AnyToUint64(c.MustGet(middleware.UserCtx))
+	currentUserID, err := type_convert.AnyToUint64(c.MustGet(middleware.UserCtx))
 	if err != nil {
 		response.Fail(c, http.StatusBadRequest, err.Error())
+		return
 	}
-	err = ctl.service.Follow(userId, follower)
+	result, err := ctl.service.Follow(targetUserID, currentUserID)
 	if err != nil {
 		response.Fail(c, http.StatusBadRequest, err.Error())
+		return
 	}
-	response.OK(c, nil)
+	response.OK(c, result)
 }

@@ -9,6 +9,7 @@ type Video struct {
 	PlayURL      string    `gorm:"size:255;not null"`
 	CoverURL     string    `gorm:"size:255;not null"`
 	Title        string    `gorm:"size:255;not null"`
+	Description  string    `gorm:"type:text"`
 	LikeCount    int64     `gorm:"default:0"`
 	CommentCount int64     `gorm:"default:0"`
 	CreatedAt    time.Time `gorm:"index" gorm:"autoCreateTime;not null"`

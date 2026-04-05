@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"mime/multipart"
 	"net/http"
 	"simple_tiktok/internal/dto/req"
 	"simple_tiktok/internal/middleware"
@@ -70,4 +71,21 @@ func (ctl *UserController) Logout(c *gin.Context) {
 		return
 	}
 	response.OK(c, nil)
+}
+
+func (ctl *UserController) UpdateProfile(c *gin.Context) {
+	var profileReq req.UpdateUserProfileReq
+	_ = c.ShouldBind(&profileReq)
+	var avatar *multipart.FileHeader
+	file, err := c.FormFile("avatar")
+	if err == nil {
+		avatar = file
+	}
+	userId := c.MustGet(middleware.UserCtx).(uint64)
+	userInfo, err := ctl.service.UpdateProfile(userId, profileReq.Nickname, avatar)
+	if err != nil {
+		response.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.OK(c, userInfo)
 }

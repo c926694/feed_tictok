@@ -22,3 +22,8 @@ func (r *FollowRepo) DeleteFollow(follow *model.Follow) error {
 	return r.db.Where("follower = ? and following = ?", follow.Follower, follow.Following).
 		Delete(&model.Follow{}).Error
 }
+
+func (r *FollowRepo) DB() *gorm.DB {
+	return r.db
+}
+

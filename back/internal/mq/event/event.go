@@ -15,9 +15,21 @@ type DeleteVideoEvent struct {
 	CoverURL string `json:"coverUrl"`
 }
 
+type FollowEvent struct {
+	EventType string `json:"event"`
+	Following uint64 `json:"following"`
+	Follower  uint64 `json:"follower"`
+}
+
+type VideoHotEvent struct {
+	VideoId uint64 `json:"videoId"`
+}
+
 const (
-	Like    = "like"
-	Dislike = "dislike"
+	Like     = "like"
+	Dislike  = "dislike"
+	Follow   = "follow"
+	Unfollow = "unfollow"
 )
 
 const (
@@ -39,4 +51,18 @@ const (
 	DeleteVideoRoutingKey   = "video.delete"
 	DeleteVideoQueue        = "video.delete.queue"
 	DeleteVideoExchangeType = "direct"
+)
+
+const (
+	FollowExchange     = "follow.exchange"
+	FollowRoutingKey   = "follow"
+	FollowQueue        = "follow.queue"
+	FollowExchangeType = "direct"
+)
+
+const (
+	VideoHotExchange     = "video.hot.exchange"
+	VideoHotRoutingKey   = "video.hot"
+	VideoHotQueue        = "video.hot.queue"
+	VideoHotExchangeType = "direct"
 )

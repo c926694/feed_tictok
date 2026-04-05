@@ -18,6 +18,10 @@ func (r *CommentRepo) Save(comment *model.Comment) error {
 	return r.db.Save(comment).Error
 }
 
+func (r *CommentRepo) WithTx(tx *gorm.DB) *CommentRepo {
+	return &CommentRepo{db: tx}
+}
+
 func (r *CommentRepo) GetById(id uint64) (model.Comment, error) {
 	var comment model.Comment
 	err := r.db.Where("id = ?", id).First(&comment).Error
@@ -30,8 +34,8 @@ func (r *CommentRepo) DeleteComment(id uint64) error {
 
 func (r *CommentRepo) ListByVideoId(videoId uint64) ([]model.Comment, error) {
 	var comments []model.Comment
-	r.db.Where("video_id = ?", videoId).Find(&comments)
-	return comments, nil
+	err := r.db.Where("video_id = ?", videoId).Find(&comments).Error
+	return comments, err
 }
 
 func (r *CommentRepo) DB() *gorm.DB {

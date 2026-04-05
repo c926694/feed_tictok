@@ -57,7 +57,12 @@ func (ctl *CommentController) List(c *gin.Context) {
 	if err != nil {
 		response.Fail(c, http.StatusBadRequest, err.Error())
 	}
-	commentList, err := ctl.service.ListByVideoId(videoId)
+	userId, err := type_convert.AnyToUint64(c.MustGet(middleware.UserCtx))
+	if err != nil {
+		response.Fail(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	commentList, err := ctl.service.ListByVideoId(videoId, userId)
 	if err != nil {
 		response.Fail(c, http.StatusInternalServerError, err.Error())
 	}

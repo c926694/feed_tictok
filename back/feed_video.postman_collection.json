@@ -107,6 +107,43 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "updateProfile",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "avatar",
+                  "type": "file",
+                  "uuid": "8ee68dc9-3aaf-4a1c-9b41-535e8fbee82c",
+                  "src": "/E:/pixiv/136643529_p0_master1200.jpg"
+                },
+                {
+                  "key": "nickname",
+                  "value": "终究小学生",
+                  "type": "text",
+                  "uuid": "3d289e0a-d830-4612-a925-7cdfb10af203"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8080/users/me",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -312,6 +349,73 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "getFeedFollowVideo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJ1c2VyX25pY2tfbmFtZSI6Iue7iOeptuWwj-WtpueUnyIsImV4cCI6MTc3NTU2MjUyMSwiaWF0IjoxNzc1MzAzMzIxfQ.fJXysF-SPnTFioyrABT5aAxHdftCfkbJc91lV_dp3IE",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/videos/feed/follow?limit=3",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "videos",
+                "feed",
+                "follow"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "3"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "getmyVideo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJ1c2VyX25pY2tfbmFtZSI6Iue7iOeptuWwj-WtpueUnyIsImV4cCI6MTc3NTU2MjUyMSwiaWF0IjoxNzc1MzAzMzIxfQ.fJXysF-SPnTFioyrABT5aAxHdftCfkbJc91lV_dp3IE",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/videos/me",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "videos",
+                "me"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -371,7 +475,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"video_id\" : 47,\r\n    \"content\" : \"这是测试评论\"\r\n}",
+              "raw": "{\r\n    \"video_id\" : 52,\r\n    \"content\" : \"这是测试评论6\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -497,15 +601,15 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJ1c2VyX25pY2tfbmFtZSI6IuaXoOaVjOWwj-WtpueUnyIsImV4cCI6MTc3NTIyNTA4OSwiaWF0IjoxNzc0OTY1ODg5fQ.sjRJ6yX2XidbFEkk_KpH8eAvPxRQ69haGgjOsJDEiDw",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJ1c2VyX25pY2tfbmFtZSI6IuaXoOaVjOWwj-WtpueUnyIsImV4cCI6MTc3NTU0MTMxNCwiaWF0IjoxNzc1MjgyMTE0fQ.Of6fgAOCB3CPZ5s4u2mpMCB-FQRCD5MRkcWKSElMi3c",
                   "type": "string"
                 }
               ]
             },
-            "method": "GET",
+            "method": "POST",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/likes/comment/switchLike/3",
+              "raw": "http://localhost:8080/likes/comment/switchLike/2",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -515,7 +619,7 @@
                 "likes",
                 "comment",
                 "switchLike",
-                "3"
+                "2"
               ]
             }
           },

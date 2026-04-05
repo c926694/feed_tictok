@@ -1,0 +1,34 @@
+export interface User {
+  id: number;
+  username: string;
+  nickname: string;
+  avatar: string;
+  bio: string;
+  followCount: number;
+  followerCount: number;
+  videoCount: number;
+}
+
+export interface Video {
+  id: number;
+  title: string;
+  description: string;
+  coverUrl: string;
+  playUrl: string;
+  createdAt?: string;
+  likeCount: number;
+  commentCount: number;
+  liked: boolean;
+  followed: boolean;
+  author: User;
+  score?: string;
+}
+
+export interface Comment {
+  id: number;
+  content: string;
+  likeCount: number;
+  liked: boolean;
+  createdAt: string;
+  author: User;
+}
