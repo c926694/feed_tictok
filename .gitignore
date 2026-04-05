@@ -1,0 +1,57 @@
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# =========================
+# Logs / runtime
+# =========================
+*.log
+*.pid
+*.out
+*.err
+
+# =========================
+# Env / secrets
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Go backend
+# =========================
+back/bin/
+back/tmp/
+back/.gocache/
+back/.gocache_local/
+coverage.out
+*.test
+
+# Local config (contains secrets/本地路径)
+back/config/*.yaml
+!back/config/*.example.yaml
+
+# Historical local config name
+.config.yaml
+
+# =========================
+# Frontend (Vue/Vite)
+# =========================
+front/node_modules/
+front/dist/
+front/.vite/
+front/.cache/
+
+# =========================
+# Build artifacts
+# =========================
+*.exe
+*.dll
+*.so
+*.dylib
