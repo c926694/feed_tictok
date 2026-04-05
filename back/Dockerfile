@@ -3,6 +3,8 @@ FROM golang:1.26-alpine AS builder
 WORKDIR /src
 
 COPY go.mod go.sum ./
+# 在 go mod download 前设置代理
+ENV GOPROXY=https://goproxy.cn,direct
 RUN go mod download
 
 COPY . .
