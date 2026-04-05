@@ -48,6 +48,9 @@ front/dist/
 front/.vite/
 front/.cache/
 
+# Local nginx deploy directory
+nginx-1.22.0-web/
+
 # =========================
 # Build artifacts
 # =========================
