@@ -59,7 +59,7 @@ services:
     environment:
       TZ: Asia/Shanghai
       STORAGE_PATH: /app/storage
-      HTTP_PATH: http://localhost:81/static/
+      HTTP_PATH: /static/
     ports:
       - "8081:8080"
     volumes:
@@ -82,7 +82,7 @@ services:
     environment:
       TZ: Asia/Shanghai
       STORAGE_PATH: /app/storage
-      HTTP_PATH: http://localhost:81/static/
+      HTTP_PATH: /static/
     volumes:
       - app_storage:/app/storage
       - ./back/config/config.compose.example.yaml:/app/config/config.yaml:ro
