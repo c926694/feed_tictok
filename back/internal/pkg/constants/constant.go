@@ -1,15 +1,28 @@
 package constants
 
+import "os"
+
 const (
 	DefaultAvatar   = "avatar/default.webp"
-	StoragePath     = "D:/develop/nginx-1.22.0-web/storage"
 	AvatarPrefix    = "/avatar/"
 	CoverPrefix     = "/cover/"
 	VideoPrefix     = "/video/"
-	HttpPath        = "http://localhost:80/static/"
 	FeedVideoKey    = "feed:video"
 	HotFeedVideoKey = "feed:hot:video"
 	LikeVideo       = "like:video:%d"
 	LikeComment     = "like:comment:%d"
 	FollowKey       = "follow:%d"
 )
+
+var (
+	StoragePath = getEnv("STORAGE_PATH", "D:/develop/nginx-1.22.0-web/storage")
+	HttpPath    = getEnv("HTTP_PATH", "http://localhost:80/static/")
+)
+
+func getEnv(key, fallback string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+	return value
+}

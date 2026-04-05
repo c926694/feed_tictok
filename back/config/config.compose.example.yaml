@@ -1,0 +1,33 @@
+server:
+  port: 8080
+  mode: release
+
+mysql:
+  host: mysql
+  port: 3306
+  username: root
+  password: 1234
+  dbname: feed_video
+  charset: utf8mb4
+
+redis:
+  host: redis
+  port: 6379
+  password: ""
+  db: 0
+
+rabbitmq:
+  host: rabbitmq
+  port: 5672
+  username: guest
+  password: guest
+
+jwt:
+  secret: "a9f3kLm92Jd8sKqP0xZr7Tn4WbC6Yh1V"
+  expire_hours: 72
+
+upload:
+  base_path: /app/storage
+  avatar_dir: avatar
+  cover_dir: cover
+  video_dir: video

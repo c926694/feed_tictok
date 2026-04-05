@@ -1,0 +1,114 @@
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: "1234"
+      MYSQL_DATABASE: feed_video
+      TZ: Asia/Shanghai
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p1234 --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      TZ: Asia/Shanghai
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      STORAGE_PATH: /app/storage
+      HTTP_PATH: http://localhost:81/static/
+    ports:
+      - "8081:8080"
+    volumes:
+      - app_storage:/app/storage
+      - ./back/config/config.compose.example.yaml:/app/config/config.yaml:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  listener:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    command: ["/app/listener"]
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      STORAGE_PATH: /app/storage
+      HTTP_PATH: http://localhost:81/static/
+    volumes:
+      - app_storage:/app/storage
+      - ./back/config/config.compose.example.yaml:/app/config/config.yaml:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "81:80"
+    volumes:
+      - app_storage:/var/www/static:ro
+    depends_on:
+      backend:
+        condition: service_started
+
+volumes:
+  mysql_data:
+  redis_data:
+  rabbitmq_data:
+  app_storage:
