@@ -3,7 +3,7 @@ FROM golang:1.26-alpine AS builder
 WORKDIR /src
 
 COPY go.mod go.sum ./
-# 在 go mod download 前设置代理
+# Optional: use a mirror in networks where the default proxy is slow.
 ENV GOPROXY=https://goproxy.cn,direct
 RUN go mod download
 
@@ -21,10 +21,15 @@ RUN apk add --no-cache ca-certificates tzdata
 COPY --from=builder /out/http /app/http
 COPY --from=builder /out/listener /app/listener
 COPY config/config.compose.example.yaml /app/config/config.yaml
+COPY assets/default-avatar.svg /app/defaults/avatar/default.svg
+COPY scripts/start-http.sh /app/start-http.sh
+COPY scripts/start-listener.sh /app/start-listener.sh
 
-RUN mkdir -p /app/storage/avatar /app/storage/cover /app/storage/video
+RUN chmod +x /app/start-http.sh /app/start-listener.sh \
+  && sed -i 's/\r$//' /app/start-http.sh /app/start-listener.sh \
+  && mkdir -p /app/storage/avatar /app/storage/cover /app/storage/video /app/defaults/avatar \
+  && cp /app/defaults/avatar/default.svg /app/storage/avatar/default.svg
 
-EXPOSE 8080
+EXPOSE 8081
 
-CMD ["/app/http"]
-
+CMD ["/app/start-http.sh"]

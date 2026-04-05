@@ -3,7 +3,7 @@ package constants
 import "os"
 
 const (
-	DefaultAvatar   = "avatar/default.webp"
+	DefaultAvatar   = "avatar/default.svg"
 	AvatarPrefix    = "/avatar/"
 	CoverPrefix     = "/cover/"
 	VideoPrefix     = "/video/"
