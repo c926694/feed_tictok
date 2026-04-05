@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 FROM golang:1.26-alpine AS builder
 
 WORKDIR /src
@@ -5,12 +6,21 @@ WORKDIR /src
 COPY go.mod go.sum ./
 # Optional: use a mirror in networks where the default proxy is slow.
 ENV GOPROXY=https://goproxy.cn,direct
-RUN go mod download
+ARG TARGETOS=linux
+ARG TARGETARCH
+
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /out/http ./cmd/http
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /out/listener ./cmd/listener
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -v -o /out/http ./cmd/http
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -v -o /out/listener ./cmd/listener
 
 FROM alpine:3.20
 
