@@ -16,7 +16,7 @@ const (
 
 var (
 	StoragePath = getEnv("STORAGE_PATH", "D:/develop/nginx-1.22.0-web/storage")
-	HttpPath    = getEnv("HTTP_PATH", "http://localhost:80/static/")
+	HttpPath    = getEnv("HTTP_PATH", "/static/")
 )
 
 func getEnv(key, fallback string) string {
