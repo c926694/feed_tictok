@@ -40,6 +40,13 @@ type FeedVideoRes struct {
 	LastScore     float64        `json:"last_score"`
 }
 
+type HotFeedVideoRes struct {
+	FeedVideoList []VideoInfoRes `json:"feed_video_list"`
+	NextOffset    uint64         `json:"next_offset"`
+	HasMore       bool           `json:"has_more"`
+	Interval      int            `json:"interval"`
+}
+
 type CommentRes struct {
 	Id        uint64      `json:"id"`
 	Commenter uint64      `json:"commenter"`

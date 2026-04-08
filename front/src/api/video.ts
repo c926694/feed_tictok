@@ -8,6 +8,12 @@ interface FeedParams {
   lastScore?: string;
 }
 
+interface HotFeedParams {
+  limit?: number;
+  offset?: number;
+  interval?: number;
+}
+
 function pickVideoList(source: unknown): RawVideo[] {
   if (Array.isArray(source)) return source as RawVideo[];
   if (!source || typeof source !== "object") return [];
@@ -21,8 +27,26 @@ export async function fetchFeedVideos(params: FeedParams = {}) {
   return fetchFeedByPath("/videos/feed", params);
 }
 
-export async function fetchHotVideos(limit = 5, lastScore?: string) {
-  return fetchFeedByPath("/videos/feed/hot", { limit, lastScore });
+export async function fetchHotVideos(params: HotFeedParams = {}) {
+  const { limit = 5, offset = 0, interval = 60 } = params;
+  const { data } = await http.get("/videos/feed/hot", {
+    params: {
+      limit,
+      offset,
+      interval,
+      _ts: Date.now()
+    }
+  });
+  const body = unwrapData<unknown>(data);
+  const list = pickVideoList(body);
+  const payload = typeof body === "object" && body ? (body as Record<string, unknown>) : {};
+  const nextOffset = Number(payload.next_offset ?? offset + list.length);
+  return {
+    videos: list.map(normalizeVideo),
+    nextOffset: Number.isFinite(nextOffset) ? nextOffset : offset + list.length,
+    hasMore: Boolean(payload.has_more),
+    interval: Number(payload.interval ?? interval)
+  };
 }
 
 export async function fetchFollowVideos(params: FeedParams = {}) {

@@ -13,6 +13,7 @@ import (
 	"simple_tiktok/internal/pkg/constants"
 	"simple_tiktok/internal/pkg/util"
 	mysql2 "simple_tiktok/internal/repository/mysql"
+	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/redis/go-redis/v9"
@@ -69,7 +70,7 @@ func (s *CommentService) CreateComment(id uint64, req req.CommentReq) (res.Comme
 	if err = tx.Commit().Error; err != nil {
 		return res.CommentRes{}, err
 	}
-	s.publishVideoHotEvent(comment.VideoID)
+	s.publishVideoHotEvent(comment.VideoID, 1)
 	commentRes := res.CommentRes{
 		Id:        comment.ID,
 		VideoId:   comment.VideoID,
@@ -109,7 +110,7 @@ func (s *CommentService) DeleteComment(userId uint64, id uint64) error {
 	if err = tx.Commit().Error; err != nil {
 		return err
 	}
-	s.publishVideoHotEvent(comment.VideoID)
+	s.publishVideoHotEvent(comment.VideoID, -1)
 	return nil
 }
 
@@ -163,11 +164,15 @@ func (s *CommentService) ListByVideoId(videoId uint64, userId uint64) ([]res.Com
 	return commentResList, nil
 }
 
-func (s *CommentService) publishVideoHotEvent(videoId uint64) {
+func (s *CommentService) publishVideoHotEvent(videoId uint64, delta float64) {
 	if s.hotMQ == nil {
 		return
 	}
-	data, err := json.Marshal(event.VideoHotEvent{VideoId: videoId})
+	data, err := json.Marshal(event.VideoHotEvent{
+		VideoId:     videoId,
+		ScoreDelta:  delta,
+		MinuteStamp: time.Now().UTC().Truncate(time.Minute).Unix(),
+	})
 	if err != nil {
 		log.Println(err)
 		return

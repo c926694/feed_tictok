@@ -98,8 +98,9 @@ func (s *VideoService) CreateVideo(req req.UploadVideoReq, userId uint64, nickNa
 	if err != nil {
 		return res.VideoRes{}, err
 	}
-	hotScore := s.HotScore(video.LikeCount, video.CommentCount, video.ID)
-	err = s.AddZSet(constants.HotFeedVideoKey, hotScore, video.ID)
+	if err = s.EnsureHotVideoMember(video.ID, time.Now()); err != nil {
+		return res.VideoRes{}, err
+	}
 	return res.VideoRes{
 		Id:  video.ID,
 		Url: util.EnsureHTTPPath(video.PlayURL),
@@ -165,48 +166,42 @@ func (s *VideoService) getFinalVideoInfoResList(videoInfoList []res.VideoInfoRes
 	return result, nil
 }
 
-func (s *VideoService) GetFeedHotVideosAndLastCore(limit uint64, lastScore float64, key string, userId uint64) ([]res.VideoInfoRes, float64, error) {
-	ids, err := s.GetFeedVideoIds(limit, lastScore, key)
+func (s *VideoService) GetFeedHotVideos(limit uint64, offset uint64, interval int, userId uint64) ([]res.VideoInfoRes, uint64, bool, error) {
+	if limit == 0 {
+		limit = 5
+	}
+	if interval <= 0 {
+		interval = 60
+	}
+	if interval > 1440 {
+		interval = 1440
+	}
+
+	ids, consumed, hasMore, err := s.GetHotVideoIDsByWindow(limit, offset, interval)
 	if err != nil {
-		return nil, 0, err
+		return nil, offset, false, err
 	}
 	if len(ids) == 0 {
-		return []res.VideoInfoRes{}, 0, nil
+		return []res.VideoInfoRes{}, offset, false, nil
 	}
+
 	videoInfoList, err := s.getVideoInfoByIds(ids)
 	if err != nil {
-		return nil, 0, err
+		return nil, offset, false, err
 	}
-	videoInfoList, err = s.getFinalVideoInfoResList(videoInfoList, ids)
-	if err != nil {
-		return nil, 0, err
+	videoInfoList = s.reorderExistingVideoInfos(videoInfoList, ids)
+	if len(videoInfoList) == 0 {
+		return []res.VideoInfoRes{}, offset + consumed, hasMore, nil
 	}
+
 	s.fillVideoAuthorAvatar(videoInfoList)
 	if err = s.fillVideoLikeStatus(videoInfoList, userId); err != nil {
-		return nil, 0, err
+		return nil, offset, false, err
 	}
 	if err = s.fillVideoFollowStatus(videoInfoList, userId); err != nil {
-		return nil, 0, err
+		return nil, offset, false, err
 	}
-	member := &redis.ZRangeBy{
-		Min:    "-inf",
-		Max:    "+inf",
-		Offset: 0,
-		Count:  int64(limit),
-	}
-	if lastScore > 0 {
-		member.Max = "(" + strconv.FormatFloat(lastScore, 'f', -1, 64)
-	}
-	ZList, err := s.redisClient.ZRevRangeByScoreWithScores(context.Background(), key, member).Result()
-	if err != nil {
-		return nil, 0, err
-	}
-	nextScore := 0.0
-	if len(ZList) > 0 {
-		// 从 Redis 结果中获取下一页游标（score）
-		nextScore = ZList[len(ZList)-1].Score
-	}
-	return videoInfoList, nextScore, nil
+	return videoInfoList, offset + consumed, hasMore, nil
 }
 
 func (s *VideoService) GetFollowFeedVideos(limit uint64, lastScore float64, userId uint64) ([]res.VideoInfoRes, float64, error) {
@@ -400,6 +395,119 @@ func (s *VideoService) GetFeedVideoIds(limit uint64, lastScore float64, key stri
 	return videoIds, nil
 }
 
+func (s *VideoService) GetHotVideoIDsByWindow(limit uint64, offset uint64, interval int) ([]uint64, uint64, bool, error) {
+	keys := make([]string, 0, interval)
+	now := time.Now().UTC().Truncate(time.Minute)
+	for i := 0; i < interval; i++ {
+		keys = append(keys, s.getHotMinuteKey(now.Add(-time.Duration(i)*time.Minute)))
+	}
+
+	mergeKey := s.getHotMergeKey(now, interval)
+	ctx := context.Background()
+	if ok, err := s.redisClient.Exists(ctx, mergeKey).Result(); err != nil {
+		return nil, 0, false, err
+	} else if ok == 0 {
+		if err = s.redisClient.ZUnionStore(ctx, mergeKey, &redis.ZStore{
+			Keys:      keys,
+			Aggregate: "SUM",
+		}).Err(); err != nil {
+			return nil, 0, false, err
+		}
+		if err = s.redisClient.Expire(ctx, mergeKey, 2*time.Minute).Err(); err != nil {
+			return nil, 0, false, err
+		}
+	}
+
+	start := int64(offset)
+	stop := start + int64(limit)
+	idsStr, err := s.redisClient.ZRevRange(ctx, mergeKey, start, stop).Result()
+	if err != nil {
+		return nil, 0, false, err
+	}
+	if len(idsStr) == 0 {
+		return []uint64{}, 0, false, nil
+	}
+
+	hasMore := len(idsStr) > int(limit)
+	if hasMore {
+		idsStr = idsStr[:limit]
+	}
+	ids := make([]uint64, 0, len(idsStr))
+	for _, raw := range idsStr {
+		id, parseErr := strconv.ParseUint(raw, 10, 64)
+		if parseErr != nil {
+			continue
+		}
+		ids = append(ids, id)
+	}
+	return ids, uint64(len(idsStr)), hasMore, nil
+}
+
+func (s *VideoService) IncrementHotScoreByMinute(videoID uint64, delta float64, minute time.Time) error {
+	if delta == 0 {
+		return nil
+	}
+	key := s.getHotMinuteKey(minute.UTC().Truncate(time.Minute))
+	ctx := context.Background()
+	pipe := s.redisClient.TxPipeline()
+	pipe.ZIncrBy(ctx, key, delta, strconv.FormatUint(videoID, 10))
+	pipe.Expire(ctx, key, 70*time.Minute)
+	_, err := pipe.Exec(ctx)
+	return err
+}
+
+func (s *VideoService) EnsureHotVideoMember(videoID uint64, minute time.Time) error {
+	key := s.getHotMinuteKey(minute.UTC().Truncate(time.Minute))
+	ctx := context.Background()
+	pipe := s.redisClient.TxPipeline()
+	pipe.ZAdd(ctx, key, redis.Z{
+		Score:  0,
+		Member: strconv.FormatUint(videoID, 10),
+	})
+	pipe.Expire(ctx, key, 70*time.Minute)
+	_, err := pipe.Exec(ctx)
+	return err
+}
+
+func (s *VideoService) RemoveVideoFromHotMinuteBuckets(videoID uint64, interval int) error {
+	if interval <= 0 {
+		return nil
+	}
+	now := time.Now().UTC().Truncate(time.Minute)
+	ctx := context.Background()
+	pipe := s.redisClient.TxPipeline()
+	for i := 0; i < interval; i++ {
+		key := s.getHotMinuteKey(now.Add(-time.Duration(i) * time.Minute))
+		pipe.ZRem(ctx, key, strconv.FormatUint(videoID, 10))
+	}
+	_, err := pipe.Exec(ctx)
+	return err
+}
+
+func (s *VideoService) getHotMinuteKey(t time.Time) string {
+	return fmt.Sprintf("%s:%s", constants.HotFeedVideoMinutePrefix, t.Format("200601021504"))
+}
+
+func (s *VideoService) getHotMergeKey(t time.Time, interval int) string {
+	return fmt.Sprintf("%s:%d:%s", constants.HotFeedVideoMergePrefix, interval, t.Format("200601021504"))
+}
+
+func (s *VideoService) reorderExistingVideoInfos(videoInfoList []res.VideoInfoRes, ids []uint64) []res.VideoInfoRes {
+	videoMap := make(map[uint64]res.VideoInfoRes, len(videoInfoList))
+	for _, videoInfo := range videoInfoList {
+		videoMap[videoInfo.Id] = videoInfo
+	}
+	result := make([]res.VideoInfoRes, 0, len(ids))
+	for _, id := range ids {
+		videoInfo, ok := videoMap[id]
+		if !ok {
+			continue
+		}
+		result = append(result, videoInfo)
+	}
+	return result
+}
+
 func (s *VideoService) GetVideoInfo(id uint64, userId uint64) (res.VideoInfoRes, error) {
 	video, err := s.videoRepo.GetVideoById(id)
 	if err != nil {
@@ -485,7 +593,7 @@ func (s *VideoService) DeleteVideo(id uint64, userId uint64) error {
 	if err := s.RemZSet(constants.FeedVideoKey, id); err != nil {
 		return err
 	}
-	if err := s.RemZSet(constants.HotFeedVideoKey, id); err != nil {
+	if err := s.RemoveVideoFromHotMinuteBuckets(id, 1440); err != nil {
 		return err
 	}
 

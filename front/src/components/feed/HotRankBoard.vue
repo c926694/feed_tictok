@@ -12,7 +12,7 @@
           <input v-model.trim="keyword" type="search" placeholder="搜索标题 / 作者（本地筛选）" />
         </label>
         <button class="ghost-btn" @click="refresh">刷新</button>
-        <button class="solid-btn" :disabled="loading || !nextScore" @click="loadMore">
+        <button class="solid-btn" :disabled="loading || !hasMore" @click="loadMore">
           {{ loading && !videos.length ? "加载中..." : "加载更多" }}
         </button>
       </div>
@@ -59,7 +59,7 @@
         </div>
       </article>
 
-      <div v-if="!loading && videos.length > 0 && !nextScore" class="end-tip">已经到底了~</div>
+      <div v-if="!loading && videos.length > 0 && !hasMore" class="end-tip">已经到底了~</div>
     </div>
 
     <CommentDrawer :open="commentOpen" :video-id="commentVideoId" @close="commentOpen = false" />
@@ -78,7 +78,9 @@ const { showToast } = useToast();
 const loading = ref(false);
 const keyword = ref("");
 const videos = ref<Video[]>([]);
-const nextScore = ref("");
+const nextOffset = ref(0);
+const hasMore = ref(true);
+const hotInterval = ref(60);
 const commentOpen = ref(false);
 const commentVideoId = ref(0);
 
@@ -102,21 +104,31 @@ const filteredVideos = computed(() => {
 async function refresh() {
   loading.value = true;
   try {
-    const result = await fetchHotVideos(5);
+    const result = await fetchHotVideos({
+      interval: hotInterval.value,
+      offset: 0,
+      limit: 5
+    });
     videos.value = result.videos;
-    nextScore.value = result.nextScore;
+    nextOffset.value = result.nextOffset;
+    hasMore.value = result.hasMore;
   } finally {
     loading.value = false;
   }
 }
 
 async function loadMore() {
-  if (loading.value || !nextScore.value) return;
+  if (loading.value || !hasMore.value) return;
   loading.value = true;
   try {
-    const result = await fetchHotVideos(5, nextScore.value);
+    const result = await fetchHotVideos({
+      interval: hotInterval.value,
+      offset: nextOffset.value,
+      limit: 5
+    });
     videos.value = videos.value.concat(result.videos);
-    nextScore.value = result.nextScore;
+    nextOffset.value = result.nextOffset;
+    hasMore.value = result.hasMore;
   } finally {
     loading.value = false;
   }

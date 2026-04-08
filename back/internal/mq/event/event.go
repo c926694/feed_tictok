@@ -22,7 +22,9 @@ type FollowEvent struct {
 }
 
 type VideoHotEvent struct {
-	VideoId uint64 `json:"videoId"`
+	VideoId     uint64  `json:"videoId"`
+	ScoreDelta  float64 `json:"scoreDelta"`
+	MinuteStamp int64   `json:"minuteStamp,omitempty"`
 }
 
 const (

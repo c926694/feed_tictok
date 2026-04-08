@@ -6,6 +6,7 @@ import (
 	"log"
 	"simple_tiktok/internal/mq/event"
 	mysql2 "simple_tiktok/internal/repository/mysql"
+	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -72,6 +73,7 @@ func (c *LikeConsumer) LikeVideoHandler(msg amqp.Delivery) {
 	}
 	videoId := videoEvent.VideoId
 	eventType := videoEvent.EventType
+	hotDelta := 0.0
 	switch eventType {
 	case event.Like:
 		if err := c.videoRepo.IncVideoLikeCount(videoId); err != nil {
@@ -79,19 +81,21 @@ func (c *LikeConsumer) LikeVideoHandler(msg amqp.Delivery) {
 			_ = msg.Nack(false, true)
 			return
 		}
+		hotDelta = 2
 	case event.Dislike:
 		if err := c.videoRepo.DecVideoDislikeCount(videoId); err != nil {
 			log.Println(err)
 			_ = msg.Nack(false, true)
 			return
 		}
+		hotDelta = -2
 	default:
 		log.Printf("unsupported like event type: %s", eventType)
 		_ = msg.Nack(false, false)
 		return
 	}
 
-	if err := c.publishVideoHotEvent(videoId); err != nil {
+	if err := c.publishVideoHotEvent(videoId, hotDelta); err != nil {
 		log.Println(err)
 		_ = msg.Nack(false, true)
 		return
@@ -136,16 +140,20 @@ func (c *LikeConsumer) LikeCommentHandler(msg amqp.Delivery) {
 	_ = msg.Ack(false)
 }
 
-func (c *LikeConsumer) publishVideoHotEvent(videoId uint64) error {
-	msg, err := c.getVideoHotEventMsg(videoId)
+func (c *LikeConsumer) publishVideoHotEvent(videoId uint64, delta float64) error {
+	msg, err := c.getVideoHotEventMsg(videoId, delta)
 	if err != nil {
 		return err
 	}
 	return c.channel.Publish(event.VideoHotExchange, event.VideoHotRoutingKey, false, false, msg)
 }
 
-func (c *LikeConsumer) getVideoHotEventMsg(videoId uint64) (amqp.Publishing, error) {
-	e := event.VideoHotEvent{VideoId: videoId}
+func (c *LikeConsumer) getVideoHotEventMsg(videoId uint64, delta float64) (amqp.Publishing, error) {
+	e := event.VideoHotEvent{
+		VideoId:     videoId,
+		ScoreDelta:  delta,
+		MinuteStamp: time.Now().UTC().Truncate(time.Minute).Unix(),
+	}
 	data, err := json.Marshal(e)
 	if err != nil {
 		return amqp.Publishing{}, err

@@ -3,15 +3,17 @@ package constants
 import "os"
 
 const (
-	DefaultAvatar   = "avatar/default.svg"
-	AvatarPrefix    = "/avatar/"
-	CoverPrefix     = "/cover/"
-	VideoPrefix     = "/video/"
-	FeedVideoKey    = "feed:video"
-	HotFeedVideoKey = "feed:hot:video"
-	LikeVideo       = "like:video:%d"
-	LikeComment     = "like:comment:%d"
-	FollowKey       = "follow:%d"
+	DefaultAvatar            = "avatar/default.svg"
+	AvatarPrefix             = "/avatar/"
+	CoverPrefix              = "/cover/"
+	VideoPrefix              = "/video/"
+	FeedVideoKey             = "feed:video"
+	HotFeedVideoKey          = "feed:hot:video"
+	HotFeedVideoMinutePrefix = "feed:hot:video:1m"
+	HotFeedVideoMergePrefix  = "feed:hot:video:merge"
+	LikeVideo                = "like:video:%d"
+	LikeComment              = "like:comment:%d"
+	FollowKey                = "follow:%d"
 )
 
 var (

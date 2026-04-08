@@ -5,9 +5,9 @@ import (
 	"errors"
 	"log"
 	"simple_tiktok/internal/mq/event"
-	"simple_tiktok/internal/pkg/constants"
 	mysql2 "simple_tiktok/internal/repository/mysql"
 	"simple_tiktok/internal/service"
+	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 	"gorm.io/gorm"
@@ -76,6 +76,10 @@ func (c *VideoHotConsumer) HotUpdateHandler(msg amqp.Delivery) {
 	}
 
 	videoId := e.VideoId
+	if e.ScoreDelta == 0 {
+		_ = msg.Ack(false)
+		return
+	}
 	video, err := c.videoRepo.GetVideoById(videoId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -87,8 +91,11 @@ func (c *VideoHotConsumer) HotUpdateHandler(msg amqp.Delivery) {
 		return
 	}
 
-	score := c.videoService.HotScore(video.LikeCount, video.CommentCount, videoId)
-	if err := c.videoService.UpdateZSet(constants.HotFeedVideoKey, score, videoId); err != nil {
+	minute := time.Now()
+	if e.MinuteStamp > 0 {
+		minute = time.Unix(e.MinuteStamp, 0)
+	}
+	if err := c.videoService.IncrementHotScoreByMinute(video.ID, e.ScoreDelta, minute); err != nil {
 		log.Println(err)
 		_ = msg.Nack(false, true)
 		return

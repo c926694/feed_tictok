@@ -63,7 +63,9 @@ const followVideos = ref<Video[]>([]);
 const hotVideos = ref<Video[]>([]);
 const currentScoreRecommend = ref("");
 const currentScoreFollow = ref("");
-const currentScoreHot = ref("");
+const hotNextOffset = ref(0);
+const hotHasMore = ref(true);
+const hotInterval = 60;
 const activeIndex = ref(0);
 
 const commentOpen = ref(false);
@@ -78,7 +80,7 @@ const displayVideos = computed(() => {
 const currentNextScore = computed(() => {
   if (props.tab === "recommend") return currentScoreRecommend.value;
   if (props.tab === "follow") return currentScoreFollow.value;
-  if (props.tab === "hot") return currentScoreHot.value;
+  if (props.tab === "hot") return hotHasMore.value ? "1" : "";
   return currentScoreRecommend.value;
 });
 const showEndTip = computed(
@@ -110,10 +112,15 @@ async function loadInitial() {
       if (props.initialHotVideos?.length) {
         hotVideos.value = props.initialHotVideos.slice();
       }
-      const hot = await fetchHotVideos(5);
+      const hot = await fetchHotVideos({
+        interval: hotInterval,
+        offset: 0,
+        limit: 5
+      });
       // 热榜顺序由后端 score 排序决定，前端直接使用返回顺序
       hotVideos.value = hot.videos;
-      currentScoreHot.value = hot.nextScore;
+      hotNextOffset.value = hot.nextOffset;
+      hotHasMore.value = hot.hasMore;
       await alignHotStartVideo();
       return;
     }
@@ -123,9 +130,14 @@ async function loadInitial() {
     currentScoreRecommend.value = feed.nextScore;
 
     if (!recommendVideos.value.length) {
-      const hot = await fetchHotVideos(5);
+      const hot = await fetchHotVideos({
+        interval: hotInterval,
+        offset: 0,
+        limit: 5
+      });
       hotVideos.value = hot.videos;
-      currentScoreHot.value = hot.nextScore;
+      hotNextOffset.value = hot.nextOffset;
+      hotHasMore.value = hot.hasMore;
     }
   } finally {
     loading.value = false;
@@ -198,10 +210,15 @@ async function loadMore() {
       return;
     }
     if (props.tab === "hot") {
-      if (!currentScoreHot.value) return;
-      const hot = await fetchHotVideos(5, currentScoreHot.value);
+      if (!hotHasMore.value) return;
+      const hot = await fetchHotVideos({
+        interval: hotInterval,
+        offset: hotNextOffset.value,
+        limit: 5
+      });
       hotVideos.value = hotVideos.value.concat(hot.videos);
-      currentScoreHot.value = hot.nextScore;
+      hotNextOffset.value = hot.nextOffset;
+      hotHasMore.value = hot.hasMore;
       return;
     }
     if (!currentScoreRecommend.value) return;
@@ -285,9 +302,14 @@ watch(
     if (tab === "hot") {
       loading.value = true;
       try {
-        const hot = await fetchHotVideos(5);
+        const hot = await fetchHotVideos({
+          interval: hotInterval,
+          offset: 0,
+          limit: 5
+        });
         hotVideos.value = hot.videos;
-        currentScoreHot.value = hot.nextScore;
+        hotNextOffset.value = hot.nextOffset;
+        hotHasMore.value = hot.hasMore;
       } finally {
         loading.value = false;
       }

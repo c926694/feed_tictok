@@ -121,27 +121,36 @@ func (ctl *VideoController) GetVideoInfo(c *gin.Context) {
 }
 
 func (ctl *VideoController) GetFeedHotVideos(c *gin.Context) {
-	lastScore, err := strconv.ParseFloat(c.DefaultQuery("last_score", strconv.FormatFloat(math.MaxFloat64, 'f', -1, 64)), 64)
+	interval, err := strconv.Atoi(c.DefaultQuery("interval", "60"))
 	if err != nil {
-		response.Fail(c, http.StatusInternalServerError, err.Error())
+		response.Fail(c, http.StatusBadRequest, "invalid interval")
+		return
 	}
 	limit, err := strconv.ParseUint(c.DefaultQuery("limit", "3"), 10, 64)
 	if err != nil {
-		response.Fail(c, http.StatusInternalServerError, err.Error())
+		response.Fail(c, http.StatusBadRequest, "invalid limit")
+		return
+	}
+	offset, err := strconv.ParseUint(c.DefaultQuery("offset", "0"), 10, 64)
+	if err != nil {
+		response.Fail(c, http.StatusBadRequest, "invalid offset")
+		return
 	}
 	userId, err := type_convert.AnyToUint64(c.MustGet(middleware.UserCtx))
 	if err != nil {
 		response.Fail(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	videoInfoResList, nextScore, err := ctl.service.GetFeedHotVideosAndLastCore(limit, lastScore, constants.HotFeedVideoKey, userId)
+	videoInfoResList, nextOffset, hasMore, err := ctl.service.GetFeedHotVideos(limit, offset, interval, userId)
 	if err != nil {
 		response.Fail(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	response.OK(c, &res.FeedVideoRes{
+	response.OK(c, &res.HotFeedVideoRes{
 		FeedVideoList: videoInfoResList,
-		LastScore:     nextScore,
+		NextOffset:    nextOffset,
+		HasMore:       hasMore,
+		Interval:      interval,
 	})
 }
 
